@@ -20,6 +20,10 @@ public class Person extends BaseBean implements Serializable, Comparable<BaseBea
 	private String lastName = null;
 	private String nickName = null;
 
+	public Person() {
+		this.setType("person");
+	}	
+
 	public String getFirstName() {
 		return firstName;
 	}

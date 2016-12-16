@@ -23,6 +23,16 @@ public class BaseBeanComparator implements Comparator<BaseBean> {
 			return comparision;
 		}
 
+		comparision = StringValidator.compareToIgnoreCase(pOne.get_rev(), pTwo.get_rev());
+		if (comparision != EQUAL) {
+			return comparision;
+		}
+
+		comparision = StringValidator.compareToIgnoreCase(pOne.getType(), pTwo.getType());
+		if (comparision != EQUAL) {
+			return comparision;
+		}
+
 		// all comparisons have yielded equality
 		// verify that compareTo is consistent with equals (optional)
 		assert pOne.equals(pTwo) : "compareTo inconsistent with equals.";

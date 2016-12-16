@@ -15,6 +15,10 @@ public class Player extends Person implements Serializable, Comparable<BaseBean>
 	private String notes = null;
 	private Team team = null;
 
+	public Player() {
+		this.setType("player");
+	}
+
 	public String getPosition() {
 		return position;
 	}

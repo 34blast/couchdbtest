@@ -15,6 +15,8 @@ public class BaseBean implements Serializable, Comparable<BaseBean> {
 
 	private String _id = null;
 	private String _rev = null;
+	private String type = null;
+
 
 	/**
 	 * Constructor for this class
@@ -39,6 +41,14 @@ public class BaseBean implements Serializable, Comparable<BaseBean> {
 		this._rev = _rev;
 	}
 
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+	
 	@Override
 	public int compareTo(BaseBean pOther) {
 		final int EQUAL = 0;
@@ -56,6 +66,10 @@ public class BaseBean implements Serializable, Comparable<BaseBean> {
 		if (comparison != EQUAL)
 			return comparison;
 
+		comparison = this.type.compareTo(pOther.type);
+		if (comparison != EQUAL)
+			return comparison;
+
 		// all comparisons have yielded equality
 		// verify that compareTo is consistent with equals (optional)
 		assert this.equals(pOther) : "compareTo inconsistent with equals.";
@@ -64,12 +78,14 @@ public class BaseBean implements Serializable, Comparable<BaseBean> {
 
 	} // end of compareTo
 
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((_id == null) ? 0 : _id.hashCode());
 		result = prime * result + ((_rev == null) ? 0 : _rev.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
 
@@ -92,6 +108,11 @@ public class BaseBean implements Serializable, Comparable<BaseBean> {
 				return false;
 		} else if (!_rev.equals(other._rev))
 			return false;
+		if (type == null) {
+			if (other.type != null)
+				return false;
+		} else if (!type.equals(other.type))
+			return false;
 		return true;
 	}
 
@@ -101,6 +122,8 @@ public class BaseBean implements Serializable, Comparable<BaseBean> {
 		sb.append(_id);
 		sb.append(", _rev=");
 		sb.append(_rev);
+		sb.append(", type=");
+		sb.append(type);
 		sb.append(", className=");
 		sb.append(this.getClass().getName());
 		sb.append("]");

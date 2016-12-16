@@ -10,6 +10,7 @@ import org.lightcouch.CouchDbClient;
 import org.lightcouch.NoDocumentException;
 import org.lightcouch.View;
 
+import rmscott.common.Person;
 import rmscott.football.FootballPosition;
 import rmscott.football.Player;
 import rmscott.football.PlayerComparator;
@@ -60,12 +61,12 @@ public class PlayerCouchCRUDTest {
 		System.out.println();
 
 		try {
-			dbClient.find(Player.class, "dummy");
+			dbClient.find(Person.class, "dummy");
 		} catch (NoDocumentException docExc) {
 			System.out.println("no document found for key of dummy so add it");
-			Player player = PlayerCouchCRUDTest.getDummyRecord();
+			Person person = PlayerCouchCRUDTest.getDummyRecord();
 			try {
-				dbClient.save(player);
+				dbClient.save(person);
 			} catch (Exception excInner) {
 				System.err.println("Error could not add Dummy Record");
 			}
@@ -74,17 +75,55 @@ public class PlayerCouchCRUDTest {
 			System.out.println("class Name : " + this.getClass().getName());
 		}
 
-		Player[] players = PlayerCouchCRUDTest.getInitialPlayers();
-		for (Player player : players) {
-			try {
-				dbClient.save(player);
-			} catch (Exception exc) {
-				System.err.println("Error Saving adding a player");
-				System.err.println(exc);
-			}
+	} // end of addDummyPlayer
+
+	public void testAddPerson() {
+		System.out.println();
+		System.out.println("testAddPerson ...................");
+		System.out.println();
+
+		Person person = PlayerCouchCRUDTest.getOnePerson();
+		try {
+			dbClient.save(person);
+		} catch (Exception exc) {
+			System.err.println("Error Saving adding a person");
+			System.err.println(exc);
 		}
 
-	} // end of addDummyPlayer
+	} // end of testAddPerson
+
+	public void testReadOnePerson() {
+		System.out.println();
+		System.out.println("testReadOnePerson ...................");
+
+		Person person = dbClient.find(Person.class, "P1");
+		System.out.print("Guts of Person");
+		System.out.println("--------------------------------------------------------------");
+		System.out.println(person);
+		System.out.println();
+
+	} // end of testReadOnePerson
+
+	public void testDeleteOnePerson() {
+		System.out.println();
+		System.out.println("testDeleteOnePerson ...................");
+
+		try {
+			Person person = dbClient.find(Person.class, "P1");
+			if (person == null) {
+				System.out.println("No player returned");
+			} else {
+				dbClient.remove(person);
+				System.out.println("Person P1 deleted ");
+			}
+		} catch (NoDocumentException docExc) {
+			System.out.println("no document found for key of P1");
+		} catch (Exception exc) {
+			System.out.println(exc);
+			System.out.println("class Name : " + this.getClass().getName());
+		}
+
+	} // end of testReadOnePerson
 
 	public void testAddPlayers() {
 		System.out.println();
@@ -254,21 +293,14 @@ public class PlayerCouchCRUDTest {
 
 	} // end of testDeleteAllPlayers
 
-	static public Player getDummyRecord() {
-		Team rams = new Team();
-		rams.setNameName("Rams");
-		rams.set_id("dummy");
+	static public Person getDummyRecord() {
+		Person dummy = null;
 
-		Player dummy = null;
-
-		dummy = new Player();
+		dummy = new Person();
+		dummy.setType("dummy"); // this won't be found for Person or Player
 		dummy.set_id("dummy");
 		dummy.setFirstName("dummy");
 		dummy.setLastName("dummy");
-		dummy.setNotes("dummy");
-		dummy.setRanking((float) 0.3);
-		dummy.setPosition("dummy");
-		dummy.setTeam(rams);
 
 		return dummy;
 
@@ -279,9 +311,7 @@ public class PlayerCouchCRUDTest {
 		giants.setNameName("Giants");
 		giants.set_id("1");
 
-		Player odellBeckum = null;
-
-		odellBeckum = new Player();
+		Player odellBeckum = new Player();
 		odellBeckum.set_id("1");
 		odellBeckum.setFirstName("Odell");
 		odellBeckum.setLastName("Beckum");
@@ -291,6 +321,17 @@ public class PlayerCouchCRUDTest {
 		odellBeckum.setTeam(giants);
 
 		return odellBeckum;
+
+	}
+
+	static public Person getOnePerson() {
+
+		Person person = new Person();
+		person.set_id("P1");
+		person.setFirstName("FirstName");
+		person.setLastName("LastName");
+
+		return person;
 
 	}
 
@@ -361,8 +402,14 @@ public class PlayerCouchCRUDTest {
 		System.out.println();
 
 		PlayerCouchCRUDTest test = new PlayerCouchCRUDTest();
+		// setup Methods, to start clean
 		test.addDummyPlayer();
 		test.testDeleteAllPlayers();
+		test.testDeleteOnePerson();
+
+		// Test them out
+		test.testAddPerson();
+		test.testReadOnePerson();
 		test.testAddPlayers();
 		test.testAddDuplicate();
 		test.testReadAllPlayers();
@@ -371,7 +418,10 @@ public class PlayerCouchCRUDTest {
 		test.testRankPlayers();
 		test.testDeleteOnePlayer();
 		test.testReadAllPlayers();
+
+		// Clean up at end
 		test.testDeleteAllPlayers();
+		test.testDeleteOnePerson();
 
 		System.out.println();
 
