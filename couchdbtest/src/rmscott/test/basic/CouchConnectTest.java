@@ -3,12 +3,11 @@
  */
 package rmscott.test.basic;
 
-import org.bson.Document;
+import java.net.URI;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.ListCollectionsIterable;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
+import org.lightcouch.CouchDbClient;
+
+import com.google.gson.Gson;
 
 /**
  * @author rmscott
@@ -24,57 +23,42 @@ public class CouchConnectTest {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		System.out.println("MongoConnectTest.main() : ..... begin execution ..... ");
+		System.out.println("CouchConnectTest.main() : ..... begin execution ..... ");
 		System.out.println();
-		MongoClient mongoClient = null;
-		MongoDatabase db = null;
-
+		CouchDbClient dbClient = null;
+		
 		try {
-			mongoClient = new MongoClient();
+			/*
+			dbClient = new CouchDbClient("fantasy", true, 
+					"http", "127.0.0.1", 5984, "rmscott", "secret");
+			dbClient = new CouchDbClient("fantasy", true, 
+					"http", "127.0.0.1", 5984, null, null);
+					*/
 
-			// show all database names
-			MongoIterable<String> dbNames = mongoClient.listDatabaseNames();
+			// the method below uses the couchdb.properties from classpath
+			dbClient = new CouchDbClient();
+			Gson gson = dbClient.getGson();
+			System.out.println("Returned gson : " + gson);
+			URI uri = dbClient.getBaseUri();
+			System.out.println("Returned baseUri : " + uri);
+
 			System.out.println();
 			System.out.println("DB Names Below");
 			System.out.println("--------------------------------------------------------------");
-			for (String dbName : dbNames) {
-				System.out.println(dbName);
-			}
 
-			db = mongoClient.getDatabase("fantasy");
-			// show all collections
-			System.out.println();
-			System.out.println("DB Collection Names Below for fantasy");
-			System.out.println("--------------------------------------------------------------");
-			MongoIterable<String> allCollectionNames = db.listCollectionNames();
-			for (String coll : allCollectionNames) {
-				System.out.println(coll);
-			}
-
-			System.out.println();
-			System.out.println("Print collection contents");
-			System.out.println("--------------------------------------------------------------");
-			ListCollectionsIterable<Document> collections = db.listCollections();
-			for (Document doc : collections) {
-				System.out.print("Guts of collection : ");
-				System.out.println(doc.get("name"));
-				System.out.println("--------------------------------------------------------------");
-				System.out.println(doc.toJson());
-				System.out.println();
-			}
 			System.out.println();
 
 		} catch (Exception exc) {
 			System.err.println(exc);
 		} finally {
 			try {
-				mongoClient.close();
+				dbClient.shutdown();
 			} catch (Exception excX) {
 
 			}
 		}
 
-		System.out.println("MongoConnectTest.main() : ..... ending execution ..... ");
+		System.out.println("CouchConnectTest.main() : ..... ending execution ..... ");
 		System.exit(0);
 
 	}

@@ -39,7 +39,6 @@ public class Player extends Person implements Serializable, Comparable<BaseBean>
 		this.notes = notes;
 	}
 
-	
 	public Team getTeam() {
 		return team;
 	}
@@ -139,6 +138,7 @@ public class Player extends Person implements Serializable, Comparable<BaseBean>
 		return EQUAL;
 
 	} // end of compareTo
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer("Player [position=");
@@ -153,7 +153,11 @@ public class Player extends Person implements Serializable, Comparable<BaseBean>
 		sb.append(super.toString());
 		sb.append(StringValidator.EOL);
 		sb.append("    ");
-		sb.append(team.toString());
+		if (team != null) {
+			sb.append(team.toString());
+		} else {
+			sb.append("team=null");
+		}
 
 		return sb.toString();
 	}
