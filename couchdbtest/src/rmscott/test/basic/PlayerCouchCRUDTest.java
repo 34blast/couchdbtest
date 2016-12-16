@@ -3,6 +3,7 @@
  */
 package rmscott.test.basic;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.lightcouch.CouchDbClient;
@@ -11,9 +12,14 @@ import org.lightcouch.View;
 
 import rmscott.football.FootballPosition;
 import rmscott.football.Player;
+import rmscott.football.PlayerComparator;
 import rmscott.football.Team;
 
 /**
+ * Test class uses 2 views created in the players design allplayers and giants.
+ * The views excluded a dummy record. When I deleted all records the views go
+ * away
+ * 
  * @author rmscott
  *
  */
@@ -43,6 +49,42 @@ public class PlayerCouchCRUDTest {
 			super.finalize();
 		}
 	}
+
+	/**
+	 * Keep in a dummy record or couchdb removes the views needed Created it if
+	 * needed otherwise do nothing
+	 */
+	public void addDummyPlayer() {
+		System.out.println();
+		System.out.println("addDummyPlayer ...................");
+		System.out.println();
+
+		try {
+			dbClient.find(Player.class, "dummy");
+		} catch (NoDocumentException docExc) {
+			System.out.println("no document found for key of dummy so add it");
+			Player player = PlayerCouchCRUDTest.getDummyRecord();
+			try {
+				dbClient.save(player);
+			} catch (Exception excInner) {
+				System.err.println("Error could not add Dummy Record");
+			}
+		} catch (Exception exc) {
+			System.out.println(exc);
+			System.out.println("class Name : " + this.getClass().getName());
+		}
+
+		Player[] players = PlayerCouchCRUDTest.getInitialPlayers();
+		for (Player player : players) {
+			try {
+				dbClient.save(player);
+			} catch (Exception exc) {
+				System.err.println("Error Saving adding a player");
+				System.err.println(exc);
+			}
+		}
+
+	} // end of addDummyPlayer
 
 	public void testAddPlayers() {
 		System.out.println();
@@ -81,9 +123,9 @@ public class PlayerCouchCRUDTest {
 		System.out.println();
 		System.out.println("testReadAllPlayers ...................");
 
-		View allDocsView = dbClient.view("_all_docs");
-		allDocsView.includeDocs(true);
-		List<Player> players = allDocsView.query(Player.class);
+		View playerView = dbClient.view("players/allplayers");
+		playerView.includeDocs(true);
+		List<Player> players = playerView.query(Player.class);
 
 		for (Player player : players) {
 			System.out.print("Guts of collection : Player");
@@ -118,14 +160,21 @@ public class PlayerCouchCRUDTest {
 
 	} // end of testReadGiantsPlayers
 
-	public void testRanklayers() {
+	/**
+	 * This method assumes there is a design document named players and a view
+	 * named allplayers. Sorting is done after docs are returned. I did not see
+	 * an easy way to do this in CouchDB
+	 * 
+	 */
+	public void testRankPlayers() {
 		System.out.println();
 		System.out.println("testRanklayers ...................");
 		System.out.println();
 
-		View allDocsView = dbClient.view("_all_docs");
-		allDocsView.includeDocs(true);
-		List<Player> players = allDocsView.query(Player.class);
+		View playerView = dbClient.view("players/allplayers");
+		playerView.includeDocs(true);
+		List<Player> players = playerView.query(Player.class);
+		Collections.sort(players, new PlayerComparator());
 
 		for (Player player : players) {
 			System.out.print("Guts of collection : Player");
@@ -140,9 +189,9 @@ public class PlayerCouchCRUDTest {
 	public void testUpdatePlayers() {
 		System.out.println();
 		System.out.println("testUpdatePlayers ...................");
-		View allDocsView = dbClient.view("_all_docs");
-		allDocsView.includeDocs(true);
-		List<Player> players = allDocsView.query(Player.class);
+		View playerView = dbClient.view("players/allplayers");
+		playerView.includeDocs(true);
+		List<Player> players = playerView.query(Player.class);
 
 		for (Player player : players) {
 			player.setPosition(FootballPosition.WR);
@@ -184,9 +233,9 @@ public class PlayerCouchCRUDTest {
 		System.out.println("testDeleteAllPlayers ...................");
 		System.out.println();
 
-		View allDocsView = dbClient.view("_all_docs");
-		allDocsView.includeDocs(true);
-		List<Player> players = allDocsView.query(Player.class);
+		View playerView = dbClient.view("players/allplayers");
+		playerView.includeDocs(true);
+		List<Player> players = playerView.query(Player.class);
 
 		int size = players.size();
 		if (size == 1) {
@@ -198,10 +247,32 @@ public class PlayerCouchCRUDTest {
 		}
 
 		for (Player player : players) {
-			dbClient.remove(player);
+			if (!player.get_id().equals("dummy")) {
+				dbClient.remove(player);
+			}
 		}
 
 	} // end of testDeleteAllPlayers
+
+	static public Player getDummyRecord() {
+		Team rams = new Team();
+		rams.setNameName("Rams");
+		rams.set_id("dummy");
+
+		Player dummy = null;
+
+		dummy = new Player();
+		dummy.set_id("dummy");
+		dummy.setFirstName("dummy");
+		dummy.setLastName("dummy");
+		dummy.setNotes("dummy");
+		dummy.setRanking((float) 0.3);
+		dummy.setPosition("dummy");
+		dummy.setTeam(rams);
+
+		return dummy;
+
+	}
 
 	static public Player getOnePlayer() {
 		Team giants = new Team();
@@ -290,15 +361,17 @@ public class PlayerCouchCRUDTest {
 		System.out.println();
 
 		PlayerCouchCRUDTest test = new PlayerCouchCRUDTest();
-		test.testReadGiantsPlayers();
-		/*
-		 * test.testDeleteAllPlayers(); test.testAddPlayers();
-		 * test.testAddDuplicate(); test.testReadAllPlayers();
-		 * test.testUpdatePlayers(); test.testReadAllPlayers();
-		 * test.testReadGiantsPlayers(); test.testRanklayers();
-		 * test.testDeleteOnePlayer(); test.testReadAllPlayers();
-		 * test.testDeleteAllPlayers();
-		 */
+		test.addDummyPlayer();
+		test.testDeleteAllPlayers();
+		test.testAddPlayers();
+		test.testAddDuplicate();
+		test.testReadAllPlayers();
+		test.testUpdatePlayers();
+		test.testReadAllPlayers();
+		test.testRankPlayers();
+		test.testDeleteOnePlayer();
+		test.testReadAllPlayers();
+		test.testDeleteAllPlayers();
 
 		System.out.println();
 
